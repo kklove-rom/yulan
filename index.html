@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HTML代码预览工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #f8f9fa;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 375px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #f0f0f0;
+            padding: 16px 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .search-container {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-count {
+            font-size: 14px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .search-buttons {
+            display: flex;
+            gap: 8px;
+            padding: 8px 20px 12px;
+        }
+
+        .search-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #4a6cf7;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .search-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 350px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            background-color: #fff;
+            outline: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .run-btn {
+            background: #4a6cf7;
+            color: white;
+        }
+
+        .run-btn:hover {
+            background: #3a5bd9;
+        }
+
+        .clear-btn {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        .clear-btn:hover {
+            background: #e9ecef;
+        }
+
+        .save-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #218838;
+        }
+
+        .preview-container {
+            padding: 20px;
+        }
+
+        .preview-box {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HTML代码预览工具</h1>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="搜索代码..." id="searchInput">
+                <span class="search-count" id="searchCount">0/0</span>
+            </div>
+        </div>
+
+        <div class="search-buttons">
+            <button class="search-btn" id="prevBtn" disabled>上一个</button>
+            <button class="search-btn" id="nextBtn" disabled>下一个</button>
+        </div>
+
+        <textarea class="code-editor" id="codeEditor" placeholder="在这里输入HTML代码..."></textarea>
+
+        <div class="btn-group">
+            <button class="btn run-btn" id="runBtn">运行</button>
+            <button class="btn clear-btn" id="clearBtn">清空</button>
+            <button class="btn save-btn" id="saveBtn">保存为HTML</button>
+        </div>
+
+        <div class="preview-container">
+            <div class="preview-box" id="previewBox"></div>
+        </div>
+    </div>
+
+    <script>
+        const codeEditor = document.getElementById('codeEditor');
+        const runBtn = document.getElementById('runBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const previewBox = document.getElementById('previewBox');
+        const searchInput = document.getElementById('searchInput');
+        const searchCount = document.getElementById('searchCount');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        let searchMatches = [];
+        let currentMatchIndex = -1;
+
+        runBtn.addEventListener('click', () => {
+            const code = codeEditor.value;
+            previewBox.innerHTML = '';
+            
+            const iframe = document.createElement('iframe');
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.borderRadius = '8px';
+            previewBox.appendChild(iframe);
+            
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(code);
+            iframeDoc.close();
+        });
+
+        clearBtn.addEventListener('click', () => {
+            codeEditor.value = '';
+            previewBox.innerHTML = '';
+            searchInput.value = '';
+            searchCount.textContent = '0/0';
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+            searchMatches = [];
+            currentMatchIndex = -1;
+        });
+
+        saveBtn.addEventListener('click', () => {
+            const code = codeEditor.value;
+            if (!code.trim()) {
+                alert('代码为空，无法保存！');
+                return;
+            }
+            
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'code.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.trim();
+            searchMatches = [];
+            currentMatchIndex = -1;
+            
+            if (searchTerm) {
+                const text = codeEditor.value;
+                let lastIndex = 0;
+                
+                while (true) {
+                    const matchIndex = text.indexOf(searchTerm, lastIndex);
+                    if (matchIndex === -1) break;
+                    
+                    searchMatches.push(matchIndex);
+                    lastIndex = matchIndex + searchTerm.length;
+                }
+                
+                if (searchMatches.length > 0) {
+                    currentMatchIndex = 0;
+                    highlightMatch(currentMatchIndex);
+                    updateSearchCount();
+                    prevBtn.disabled = false;
+                    nextBtn.disabled = false;
+                } else {
+                    updateSearchCount();
+                    prevBtn.disabled = true;
+                    nextBtn.disabled = true;
+                }
+            } else {
+                updateSearchCount();
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (searchMatches.length === 0) return;
+            
+            currentMatchIndex = (currentMatchIndex - 1 + searchMatches.length) % searchMatches.length;
+            highlightMatch(currentMatchIndex);
+            updateSearchCount();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (searchMatches.length === 0) return;
+            
+            currentMatchIndex = (currentMatchIndex + 1) % searchMatches.length;
+            highlightMatch(currentMatchIndex);
+            updateSearchCount();
+        });
+
+        function highlightMatch(index) {
+            const searchTerm = searchInput.value.trim();
+            const textarea = codeEditor;
+            const startPos = searchMatches[index];
+            const endPos = startPos + searchTerm.length;
+            
+            textarea.focus();
+            textarea.setSelectionRange(startPos, endPos);
+            
+            const lineHeight = 20;
+            const lines = textarea.value.substr(0, startPos).split('\n').length - 1;
+            const scrollTop = lines * lineHeight;
+            textarea.scrollTop = scrollTop - textarea.clientHeight / 2;
+        }
+
+        function updateSearchCount() {
+            const total = searchMatches.length;
+            const current = currentMatchIndex + 1;
+            searchCount.textContent = total > 0 ? `${current}/${total}` : '0/0';
+        }
+
+        updateSearchCount();
+    </script>
+</body>
+</html>
