@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML代码运行工具-移动端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            padding: 10px;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-run {
+            background-color: #4a6cf7;
+            color: white;
+        }
+
+        .btn-run:hover {
+            background-color: #3a5bd9;
+        }
+
+        .btn-clear {
+            background-color: #fff;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        .btn-clear:hover {
+            background-color: #f0f0f0;
+        }
+
+        .preview-section {
+            margin-top: 20px;
+        }
+
+        .preview-header {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .preview-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .preview-iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+            display: block;
+        }
+
+        .icon {
+            font-size: 16px;
+        }
+
+        .clear-confirm {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .confirm-box {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .confirm-btn {
+            flex: 1;
+            padding: 10px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .confirm-yes {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .confirm-no {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .code-editor {
+                height: 250px;
+                font-size: 13px;
+            }
+            
+            .btn {
+                min-width: 100px;
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .preview-iframe {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HTML代码运行工具-移动端</h1>
+    </div>
+
+    <textarea id="codeEditor" class="code-editor" placeholder="在这里输入HTML代码..."><!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四季动画展示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .season-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .season-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .season-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .season-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .season-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .season-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        /* 春季样式 */
+        .spring {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        
+        /* 夏季样式 */
+        .summer {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        
+        /* 秋季样式 */
+        .autumn {
+            background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+        }
+        
+        /* 冬季样式 */
+        .winter {
+            background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 100%);
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .season-card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .season-card:nth-child(2) { animation-delay: 0.2s; }
+        .season-card:nth-child(3) { animation-delay: 0.4s; }
+        .season-card:nth-child(4) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <div class="season-container">
+        <div class="season-card spring">
+            <div class="season-icon">🌸</div>
+            <div class="season-title">春季</div>
+            <div class="season-desc">万物复苏，春暖花开，生机勃勃的季节</div>
+        </div>
+        
+        <div class="season-card summer">
+            <div class="season-icon">☀️</div>
+            <div class="season-title">夏季</div>
+            <div class="season-desc">阳光灿烂，绿树成荫，热情似火的季节</div>
+        </div>
+        
+        <div class="season-card autumn">
+            <div class="season-icon">🍂</div>
+            <div class="season-title">秋季</div>
+            <div class="season-desc">金桂飘香，硕果累累，收获满满的季节</div>
+        </div>
+        
+        <div class="season-card winter">
+            <div class="season-icon">❄️</div>
+            <div class="season-title">冬季</div>
+            <div class="season-desc">银装素裹，瑞雪纷飞，静谧美好的季节</div>
+        </div>
+    </div>
+</body>
+</html></textarea>
+
+    <div class="button-group">
+        <button id="runBtn" class="btn btn-run">
+            <span class="icon">▶</span>
+            运行
+        </button>
+        <button id="clearBtn" class="btn btn-clear">
+            <span class="icon">🗑</span>
+            清空
+        </button>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div id="confirmDialog" class="clear-confirm">
+        <div class="confirm-box">
+            <h3>确认清空</h3>
+            <p>确定要清空所有代码吗？此操作不可撤销。</p>
+            <div class="confirm-buttons">
+                <button id="confirmYes" class="confirm-btn confirm-yes">确认清空</button>
+                <button id="confirmNo" class="confirm-btn confirm-no">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="preview-section">
+        <div class="preview-header">预览</div>
+        <div class="preview-container">
+            <iframe id="previewFrame" class="preview-iframe"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const codeEditor = document.getElementById('codeEditor');
+        const runBtn = document.getElementById('runBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const previewFrame = document.getElementById('previewFrame');
+        const confirmDialog = document.getElementById('confirmDialog');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+
+        // 显示确认对话框
+        function showConfirmDialog() {
+            confirmDialog.style.display = 'flex';
+        }
+
+        // 隐藏确认对话框
+        function hideConfirmDialog() {
+            confirmDialog.style.display = 'none';
+        }
+
+        // 清空所有内容
+        function clearAllContent() {
+            codeEditor.value = '';
+            
+            // 清空预览区域
+            try {
+                previewFrame.srcdoc = '';
+            } catch (error) {
+                // 兼容性处理
+                try {
+                    const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+                    iframeDoc.open();
+                    iframeDoc.write('');
+                    iframeDoc.close();
+                } catch (e) {
+                    // 如果清空iframe失败，只清空编辑区
+                    console.log('清空预览区失败，只清空了编辑区');
+                }
+            }
+            
+            // 重置iframe的src
+            previewFrame.src = 'about:blank';
+            
+            // 清空成功提示效果
+            clearBtn.style.backgroundColor = '#28a745';
+            clearBtn.innerHTML = '<span class="icon">✓</span> 已清空';
+            
+            setTimeout(() => {
+                clearBtn.style.backgroundColor = '#fff';
+                clearBtn.innerHTML = '<span class="icon">🗑</span> 清空';
+            }, 1500);
+            
+            hideConfirmDialog();
+        }
+
+        // 运行按钮点击事件
+        runBtn.addEventListener('click', function() {
+            const code = codeEditor.value;
+            if (code.trim() === '') {
+                alert('请先输入HTML代码！');
+                return;
+            }
+            
+            try {
+                // 使用srcdoc属性来避免同源策略问题
+                previewFrame.srcdoc = code;
+                
+                // 添加成功提示效果
+                const originalText = runBtn.innerHTML;
+                runBtn.style.backgroundColor = '#28a745';
+                runBtn.innerHTML = '<span class="icon">✓</span> 运行成功';
+                
+                setTimeout(() => {
+                    runBtn.style.backgroundColor = '#4a6cf7';
+                    runBtn.innerHTML = originalText;
+                }, 1500);
+                
+            } catch (error) {
+                console.error('代码执行出错:', error);
+                alert('代码执行出错，请检查语法！');
+            }
+        });
+
+        // 清空按钮点击事件
+        clearBtn.addEventListener('click', showConfirmDialog);
+
+        // 确认清空按钮
+        confirmYes.addEventListener('click', clearAllContent);
+
+        // 取消按钮
+        confirmNo.addEventListener('click', hideConfirmDialog);
+
+        // 页面加载时自动运行默认代码
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                runBtn.click();
+            }, 500);
+        });
+
+        // 支持快捷键
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+Enter 运行代码
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                runBtn.click();
+            }
+            // Ctrl+D 清空代码
+            if (e.ctrlKey && e.key === 'd') {
+                e.preventDefault();
+                showConfirmDialog();
+            }
+            // ESC键关闭确认对话框
+            if (e.key === 'Escape' && confirmDialog.style.display === 'flex') {
+                hideConfirmDialog();
+            }
+        });
+
+        // 点击对话框外部关闭
+        confirmDialog.addEventListener('click', function(e) {
+            if (e.target === confirmDialog) {
+                hideConfirmDialog();
+            }
+        });
+    </script>
+</body>
+</html>
