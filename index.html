@@ -156,6 +156,69 @@
             background: #fff;
             overflow: auto;
         }
+
+        .rename-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .rename-overlay.active {
+            display: flex;
+        }
+
+        .rename-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+        }
+
+        .rename-box h3 {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .rename-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .rename-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .rename-btns button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .rename-confirm {
+            background: #4a6cf7;
+            color: white;
+        }
+
+        .rename-cancel {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -181,11 +244,25 @@
         <div class="btn-group">
             <button class="btn run-btn" id="runBtn">运行</button>
             <button class="btn clear-btn" id="clearBtn">清空</button>
-            <button class="btn save-btn" id="saveBtn">保存为HTML</button>
+        </div>
+        <div class="btn-group">
+            <button class="btn save-btn" id="saveBtn">保存为.html</button>
+            <button class="btn save-btn" id="saveTxtBtn">保存为.txt</button>
         </div>
 
         <div class="preview-container">
             <div class="preview-box" id="previewBox"></div>
+        </div>
+    </div>
+
+    <div class="rename-overlay" id="renameOverlay">
+        <div class="rename-box">
+            <h3>重命名文件</h3>
+            <input type="text" class="rename-input" id="renameInput" placeholder="输入文件名">
+            <div class="rename-btns">
+                <button class="rename-confirm" id="renameConfirm">确定</button>
+                <button class="rename-cancel" id="renameCancel">取消</button>
+            </div>
         </div>
     </div>
 
@@ -194,26 +271,32 @@
         const runBtn = document.getElementById('runBtn');
         const clearBtn = document.getElementById('clearBtn');
         const saveBtn = document.getElementById('saveBtn');
+        const saveTxtBtn = document.getElementById('saveTxtBtn');
         const previewBox = document.getElementById('previewBox');
         const searchInput = document.getElementById('searchInput');
         const searchCount = document.getElementById('searchCount');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
+        const renameOverlay = document.getElementById('renameOverlay');
+        const renameInput = document.getElementById('renameInput');
+        const renameConfirm = document.getElementById('renameConfirm');
+        const renameCancel = document.getElementById('renameCancel');
 
         let searchMatches = [];
         let currentMatchIndex = -1;
+        let currentSaveType = '';
 
         runBtn.addEventListener('click', () => {
             const code = codeEditor.value;
             previewBox.innerHTML = '';
-            
+
             const iframe = document.createElement('iframe');
             iframe.style.width = '100%';
             iframe.style.height = '100%';
             iframe.style.border = 'none';
             iframe.style.borderRadius = '8px';
             previewBox.appendChild(iframe);
-            
+
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
             iframeDoc.write(code);
@@ -231,41 +314,85 @@
             currentMatchIndex = -1;
         });
 
-        saveBtn.addEventListener('click', () => {
+        function showRename(type) {
+            currentSaveType = type;
+            renameInput.value = '';
+            renameOverlay.classList.add('active');
+            renameInput.focus();
+        }
+
+        function doSave() {
+            const name = renameInput.value.trim();
+            if (!name) {
+                alert('请输入文件名');
+                return;
+            }
             const code = codeEditor.value;
             if (!code.trim()) {
                 alert('代码为空，无法保存！');
+                renameOverlay.classList.remove('active');
                 return;
             }
-            
-            const blob = new Blob([code], { type: 'text/html' });
+            let blob;
+            let ext;
+            if (currentSaveType === 'html') {
+                blob = new Blob([code], { type: 'text/html' });
+                ext = '.html';
+            } else {
+                blob = new Blob([code], { type: 'text/plain' });
+                ext = '.txt';
+            }
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'code.html';
+            a.download = name + ext;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            renameOverlay.classList.remove('active');
+        }
+
+        saveBtn.addEventListener('click', () => {
+            showRename('html');
+        });
+
+        saveTxtBtn.addEventListener('click', () => {
+            showRename('txt');
+        });
+
+        renameConfirm.addEventListener('click', doSave);
+
+        renameCancel.addEventListener('click', () => {
+            renameOverlay.classList.remove('active');
+        });
+
+        renameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                doSave();
+            }
+            if (e.key === 'Escape') {
+                renameOverlay.classList.remove('active');
+            }
         });
 
         searchInput.addEventListener('input', () => {
             const searchTerm = searchInput.value.trim();
             searchMatches = [];
             currentMatchIndex = -1;
-            
+
             if (searchTerm) {
                 const text = codeEditor.value;
                 let lastIndex = 0;
-                
+
                 while (true) {
                     const matchIndex = text.indexOf(searchTerm, lastIndex);
                     if (matchIndex === -1) break;
-                    
+
                     searchMatches.push(matchIndex);
                     lastIndex = matchIndex + searchTerm.length;
                 }
-                
+
                 if (searchMatches.length > 0) {
                     currentMatchIndex = 0;
                     highlightMatch(currentMatchIndex);
@@ -286,7 +413,7 @@
 
         prevBtn.addEventListener('click', () => {
             if (searchMatches.length === 0) return;
-            
+
             currentMatchIndex = (currentMatchIndex - 1 + searchMatches.length) % searchMatches.length;
             highlightMatch(currentMatchIndex);
             updateSearchCount();
@@ -294,7 +421,7 @@
 
         nextBtn.addEventListener('click', () => {
             if (searchMatches.length === 0) return;
-            
+
             currentMatchIndex = (currentMatchIndex + 1) % searchMatches.length;
             highlightMatch(currentMatchIndex);
             updateSearchCount();
@@ -305,10 +432,10 @@
             const textarea = codeEditor;
             const startPos = searchMatches[index];
             const endPos = startPos + searchTerm.length;
-            
+
             textarea.focus();
             textarea.setSelectionRange(startPos, endPos);
-            
+
             const lineHeight = 20;
             const lines = textarea.value.substr(0, startPos).split('\n').length - 1;
             const scrollTop = lines * lineHeight;
